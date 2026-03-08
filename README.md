@@ -1,12 +1,4 @@
-没问题，我给你一个完全标准的Markdown格式文件，你复制后在Termux里用下面的命令写入，就能在GitHub上正常显示了：
- 
-bash
-  
-# 进入你的项目目录
-cd ~/buildAPKs/sources/com/ncmconverter/app/
 
-# 写入标准Markdown格式的README.md
-cat > README.md << 'EOF'
 # NCM2FLAC-Converter
 安卓NCM文件转FLAC转换器，纯Termux编译，适配Android15+，修复转换后FLAC播放失败问题。
 
@@ -24,7 +16,7 @@ cat > README.md << 'EOF'
 ## 📋 环境要求
 - 一部已安装Termux的Android手机
 - Termux已安装以下工具：
-  ```bash
+  ```
   pkg update && pkg upgrade -y
   pkg install -y wget unzip zip openjdk-17 git coreutils aapt2 ecj dx apksigner
   ```
@@ -38,7 +30,7 @@ cat > README.md << 'EOF'
  
 1. 克隆项目（或使用你已有的本地项目）
  
-bash
+
   
 cd ~
 git clone https://github.com/Voidlink132/NCM2FLAC-Converter.git
@@ -47,14 +39,14 @@ cd NCM2FLAC-Converter
  
 2. 下载Android核心库（编译必备）
  
-bash
+
   
 wget -O android.jar https://github.com/AndroidIDEOfficial/android-jar/raw/master/android-35.jar
  
  
 3. 一键编译打包APK
  
-bash
+
   
 # 清空旧编译缓存
 rm -rf build compiled_res classes.dex app-unsigned.apk app-signed.apk
@@ -87,27 +79,27 @@ cp app-signed.apk ~/storage/downloads/NCM2FLAC转换器.apk
  
 📱 APK运行说明（手机端操作）
  
-1. 从GitHub Release下载APK
+# 1. 从GitHub Release下载APK
  
 1. 打开手机浏览器，访问项目GitHub主页：https://github.com/Voidlink132/NCM2FLAC-Converter
 2. 点击页面右侧的 Releases 标签，进入发布页面。
 3. 在最新的Release版本中，找到并下载  NCM2FLAC转换器.apk  文件。
 4. 下载完成后，APK文件会保存在手机的  Download （下载）目录中。
  
-2. 安装APK
+# 2. 安装APK
  
 1. 打开手机自带的文件管理器，进入  Download （下载）目录。
 2. 找到刚下载的  NCM2FLAC转换器.apk  文件，点击它。
 3. 如果系统提示“未知来源应用”，请选择允许或“继续安装”（不同手机路径：设置 → 安全 → 更多安全设置 → 安装未知应用，允许文件管理器安装）。
 4. 等待安装完成，点击“打开”启动APP。
  
-3. 首次启动配置（必做）
+# 3. 首次启动配置（必做）
  
 1. APP启动后，会弹出“需要所有文件访问权限”的提示框，点击去设置。
 2. 在系统设置页面，找到本应用（NCM2FLAC转换器），开启所有文件访问权限（或“管理所有文件”）。
 3. 返回APP，此时会自动扫描网易云音乐的NCM文件。
  
-4. 使用APP转换文件
+# 4. 使用APP转换文件
  
 - 自动转换：
 1. 在“自动”页面，APP会列出所有扫描到的NCM文件。
@@ -118,7 +110,7 @@ cp app-signed.apk ~/storage/downloads/NCM2FLAC转换器.apk
 2. 点击“选择文件”，从手机中选择任意NCM文件。
 3. 确认输出路径（默认是  /NCM2FLAC/ ），点击“开始转换”。
  
-5. 找到转换后的文件
+# 5. 找到转换后的文件
  
 - 转换后的FLAC文件默认保存在手机的  /NCM2FLAC/  目录下。
 - 你可以在文件管理器中直接找到并播放，也可以在音乐APP中扫描本地音乐添加到播放列表。
