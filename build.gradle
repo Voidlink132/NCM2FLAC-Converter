@@ -1,10 +1,12 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        // 从 7.0.4 升级到 8.2.2
+        // 升级到与 Gradle 8.5 兼容的 Android 插件版本
         classpath "com.android.tools.build:gradle:8.2.2"
     }
 }
