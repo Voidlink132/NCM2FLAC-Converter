@@ -1,0 +1,12 @@
+# 安卓编译缓存目录
+build/
+compiled_res/
+# 生成的APK文件
+*.apk
+# 安卓dex文件
+classes.dex
+# Termux临时文件
+*.swp
+*~
+# 日志文件
+*.log
