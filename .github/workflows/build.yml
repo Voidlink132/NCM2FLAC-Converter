@@ -3,7 +3,7 @@ name: Build NCM2FLAC APK
 # 触发条件：当代码推送到 main 分支时自动构建
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build:
