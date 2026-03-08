@@ -10,3 +10,12 @@ classes.dex
 *~
 # 日志文件
 *.log
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+# Ignore Kotlin plugin data
+.kotlin
