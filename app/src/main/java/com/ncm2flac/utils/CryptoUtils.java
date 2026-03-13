@@ -4,11 +4,13 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 public class CryptoUtils {
-    // 【对齐ncmc】NCM官方固定密钥，不可修改
+    // NCM官方固定密钥（ncmc硬编码值，不可修改）
     public static final byte[] NCM_CORE_KEY = "hijklmnopqrstuvw".getBytes();
     public static final byte[] NCM_META_KEY = "qqqqqqqqqqqqqqqq".getBytes();
 
-    // AES-128-ECB解密，对齐ncmc的实现
+    /**
+     * AES-128-ECB 解密，对齐ncmc标准实现
+     */
     public static byte[] aes128EcbDecrypt(byte[] data, byte[] key) throws Exception {
         SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
@@ -16,7 +18,9 @@ public class CryptoUtils {
         return cipher.doFinal(data);
     }
 
-    // RC4解密，对齐ncmc的标准实现
+    /**
+     * RC4 流解密，对齐ncmc标准实现
+     */
     public static byte[] rc4KeyDecrypt(byte[] data, byte[] key) {
         if (data == null || key == null || key.length == 0) return data;
         byte[] box = new byte[256];
@@ -46,6 +50,7 @@ public class CryptoUtils {
         return result;
     }
 
+    // Getter方法
     public static byte[] getNcmCoreKey() { return NCM_CORE_KEY; }
     public static byte[] getNcmMetaKey() { return NCM_META_KEY; }
 }
