@@ -30,6 +30,9 @@ jobs:
       - name: 授予gradlew执行权限
         run: chmod +x gradlew
 
+      - name: 清理旧编译缓存
+        run: ./gradlew clean
+  
       - name: 编译Release APK
         run: ./gradlew assembleRelease
 
