@@ -119,7 +119,14 @@ public class MainActivity extends AppCompatActivity {
                 // 3. 生成输出文件
                 String fileName = selectedFileUri.getLastPathSegment();
                 String outputFileName = FileUtils.replaceFileExtension(fileName, decryptor.getAudioFormat());
-                File outputDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Ncm2Flac");
+                File outputDir;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // Android 10+ 用应用私有目录，无需权限
+                    outputDir = new File(getExternalFilesDir(Environment.DIRECTORY_MUSIC), "Ncm2Flac");
+                } else {
+                    // 旧系统用公共音乐目录
+                    outputDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Ncm2Flac");
+                }
                 if (!outputDir.exists()) outputDir.mkdirs();
                 File outputFile = new File(outputDir, outputFileName);
 
