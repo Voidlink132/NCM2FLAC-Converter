@@ -6,8 +6,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvStatus;
     private Button btnSelectFile;
     private Uri selectedFileUri;
-    private String selectedFileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,10 +37,8 @@ public class MainActivity extends AppCompatActivity {
         tvStatus = findViewById(R.id.tv_status);
         btnSelectFile = findViewById(R.id.btn_select_file);
 
-        // 检查权限
         checkPermission();
 
-        // 选择文件按钮
         btnSelectFile.setOnClickListener(v -> {
             if (!checkPermission()) {
                 Toast.makeText(this, "请先授予存储权限", Toast.LENGTH_SHORT).show();
@@ -52,11 +47,9 @@ public class MainActivity extends AppCompatActivity {
             openFileSelector();
         });
 
-        // 处理外部打开的ncm文件
         handleIntent(getIntent());
     }
 
-    // 检查权限
     private boolean checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             int readAudioPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO);
@@ -82,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    // 打开文件选择器
     private void openFileSelector() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
@@ -96,14 +88,14 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == FILE_SELECT_CODE && resultCode == RESULT_OK && data != null) {
             selectedFileUri = data.getData();
             if (selectedFileUri != null) {
-                selectedFileName = FileUtils.getFileNameFromUri(this, selectedFileUri);
-                tvStatus.setText("已选择文件：" + selectedFileName);
+                String fileName = FileUtils.getFileNameFromUri(this, selectedFileUri);
+                tvStatus.setText("已选择文件：" + fileName);
                 startDecrypt();
             }
         }
     }
 
-    // 核心解密转换方法（完整修复版）
+    // 核心解密转换方法，完全对齐ncmc逻辑
     private void startDecrypt() {
         tvStatus.setText("正在验证NCM文件...");
         new Thread(() -> {
@@ -112,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 byte[] ncmData = FileUtils.readUriToBytes(this, selectedFileUri);
                 NcmDecryptor decryptor = new NcmDecryptor(ncmData);
                 
-                // 2. 解密校验
+                // 2. 解密校验（对齐ncmc的标准校验逻辑）
                 if (!decryptor.decrypt()) {
                     runOnUiThread(() -> {
                         tvStatus.setText("解析失败：不是有效的NCM文件");
@@ -128,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!outputDir.exists()) outputDir.mkdirs();
                 File outputFile = new File(outputDir, outputFileName);
 
-                // 4. 写入音频文件
+                // 4. 写入无损音频流
                 FileUtils.writeBytesToFile(decryptor.getAudioRawData(), outputFile);
 
                 // 5. 写入元数据
@@ -150,14 +142,13 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    // 处理外部打开的文件
     private void handleIntent(Intent intent) {
         if (intent != null && Intent.ACTION_VIEW.equals(intent.getAction())) {
             selectedFileUri = intent.getData();
             if (selectedFileUri != null) {
-                selectedFileName = FileUtils.getFileNameFromUri(this, selectedFileUri);
                 runOnUiThread(() -> {
-                    tvStatus.setText("已选择文件：" + selectedFileName);
+                    String fileName = FileUtils.getFileNameFromUri(this, selectedFileUri);
+                    tvStatus.setText("已选择文件：" + fileName);
                 });
                 startDecrypt();
             }
