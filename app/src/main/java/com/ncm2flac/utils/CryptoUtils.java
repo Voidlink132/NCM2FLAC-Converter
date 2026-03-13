@@ -4,11 +4,11 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 public class CryptoUtils {
-    // NCM格式固定AES密钥（官方固定值）
-    private static final byte[] NCM_CORE_KEY = "hijklmnopqrstuvw".getBytes();
-    private static final byte[] NCM_META_KEY = "qqqqqqqqqqqqqqqq".getBytes();
+    // NCM官方固定密钥（ncmc硬编码值，不可修改）
+    public static final byte[] NCM_CORE_KEY = "hijklmnopqrstuvw".getBytes();
+    public static final byte[] NCM_META_KEY = "qqqqqqqqqqqqqqqq".getBytes();
 
-    // AES-128-ECB解密
+    // AES-128-ECB 解密（ncmc标准实现，无填充模式修正）
     public static byte[] aes128EcbDecrypt(byte[] data, byte[] key) throws Exception {
         SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
@@ -16,33 +16,41 @@ public class CryptoUtils {
         return cipher.doFinal(data);
     }
 
-    // RC4密钥生成与解密
+    // RC4 解密（ncmc的标准RC4实现，逐字节异或）
     public static byte[] rc4KeyDecrypt(byte[] data, byte[] key) {
-        byte[] result = new byte[data.length];
+        if (data == null || key == null || key.length == 0) {
+            return data;
+        }
         byte[] box = new byte[256];
-        for (int i = 0; i < 256; i++) box[i] = (byte) i;
+        byte[] result = new byte[data.length];
 
+        // 初始化S盒（ncmc标准步骤）
+        for (int i = 0; i < 256; i++) {
+            box[i] = (byte) i;
+        }
         int j = 0;
         for (int i = 0; i < 256; i++) {
-            j = (j + box[i] + key[i % key.length]) & 0xff;
+            j = (j + box[i] + key[i % key.length]) & 0xFF;
             byte temp = box[i];
             box[i] = box[j];
             box[j] = temp;
         }
 
+        // RC4流加密（ncmc标准实现）
         int i = 0;
         j = 0;
         for (int k = 0; k < data.length; k++) {
-            i = (i + 1) & 0xff;
-            j = (j + box[i]) & 0xff;
+            i = (i + 1) & 0xFF;
+            j = (j + box[i]) & 0xFF;
             byte temp = box[i];
             box[i] = box[j];
             box[j] = temp;
-            result[k] = (byte) (data[k] ^ box[(box[i] + box[j]) & 0xff]);
+            result[k] = (byte) (data[k] ^ box[(box[i] + box[j]) & 0xFF]);
         }
         return result;
     }
 
+    // Getter方法
     public static byte[] getNcmCoreKey() {
         return NCM_CORE_KEY;
     }
