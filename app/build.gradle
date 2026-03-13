@@ -3,21 +3,27 @@ plugins {
 }
 
 android {
-    namespace 'com.example.ncm2flac' // AGP 8.x 要求明确指定 namespace
-    compileSdk 35
+    namespace 'com.ncm2flac'
+    compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.ncm2flac"
-        minSdk 21
-        targetSdk 35
+        applicationId "com.ncm2flac"
+        minSdk 24
+        targetSdk 34
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 签名配置（GitHub Action自动注入）
+            signingConfig signingConfigs.debug
+        }
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -29,8 +35,14 @@ android {
 }
 
 dependencies {
+    // AndroidX核心依赖
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // 音频元数据处理库（核心，用于写入flac/mp3的元数据和封面）
+    implementation 'org:jaudiotagger:2.2.5'
+    
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
