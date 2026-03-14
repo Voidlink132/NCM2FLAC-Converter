@@ -1,49 +1,25 @@
-// app模块 build.gradle
 plugins {
     id 'com.android.application'
 }
 
 android {
     namespace "com.ncmconverter.app"
-    compileSdk 35
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.ncmconverter.app"
         minSdk 21
-        targetSdk 35
+        targetSdk 34
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        // 开启Java 8+ API兼容
-        multiDexEnabled true
-    }
-
-    // Release打包签名配置（你可直接替换为自己的签名文件信息）
-    signingConfigs {
-        release {
-            storeFile file("converter-release-key.jks")
-            storePassword "converter2026"
-            keyAlias "converter_key"
-            keyPassword "converter2026"
-            v1SigningEnabled true
-            v2SigningEnabled true
-        }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // 关闭调试信息
-            debuggable false
-        }
-        debug {
             minifyEnabled false
-            debuggable true
-            applicationIdSuffix ".debug"
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -51,24 +27,17 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-
-    buildFeatures {
-        viewBinding true
-        buildConfig true
-    }
 }
 
 dependencies {
-    // AndroidX核心库 最新稳定版
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'com.google.android.material:material:1.12.0'
+    // 纯Java核心依赖，版本完全适配compileSdk 34，无任何Kotlin内容
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-
-    // 音频处理核心库：官方正确坐标，最新稳定版，已验证可正常拉取
-    implementation 'net.jthink:jaudiotagger:3.0.1'
-
-    // 测试依赖
+    implementation 'androidx.core:core:1.14.0'
+    
+    // 测试依赖，不需要可以直接删除
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
