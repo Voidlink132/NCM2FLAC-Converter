@@ -1,5 +1,6 @@
 package com.ncm2flac;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -24,20 +25,24 @@ public class AutoScanFragment extends Fragment {
     private RecyclerView rvNcmFiles;
     private NcmFileAdapter adapter;
     private List<File> ncmFileList = new ArrayList<>();
+    private SharedPreferences sp;
+    private final String DEFAULT_SAVE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/NCM2FLAC/";
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_auto_scan, container, false);
+        sp = requireActivity().getSharedPreferences("app_config", 0);
         rvNcmFiles = view.findViewById(R.id.rv_ncm_files);
         rvNcmFiles.setLayoutManager(new LinearLayoutManager(getContext()));
-        
-        // 修复：这里必须传入第三个参数 OnConvertListener（暂时传 null 或空实现，不影响功能）
-        adapter = new NcmFileAdapter(getContext(), ncmFileList, null);
-        rvNcmFiles.setAdapter(adapter);
-        
-        scanNcmFiles();
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // 页面可见时扫描文件
+        scanNcmFiles();
     }
 
     private void scanNcmFiles() {
@@ -57,16 +62,24 @@ public class AutoScanFragment extends Fragment {
         // 扫描根目录，跳过系统文件夹
         File rootDir = Environment.getExternalStorageDirectory();
         scanDir(rootDir);
-        
-        adapter.notifyDataSetChanged();
-        Toast.makeText(getContext(), "找到 " + ncmFileList.size() + " 个NCM文件", Toast.LENGTH_LONG).show();
+
+        // 获取保存路径
+        String savePath = sp.getString("save_path", DEFAULT_SAVE_PATH);
+        // 初始化适配器
+        if (adapter != null) {
+            adapter.release();
+        }
+        adapter = new NcmFileAdapter(getContext(), ncmFileList, savePath);
+        rvNcmFiles.setAdapter(adapter);
+
+        Toast.makeText(getContext(), "找到 " + ncmFileList.size() + " 个NCM文件", Toast.LENGTH_SHORT).show();
     }
 
     private void scanDir(File dir) {
         if (dir == null || !dir.exists() || !dir.isDirectory()) return;
         File[] files = dir.listFiles();
         if (files == null) return;
-        
+
         for (File file : files) {
             if (file.isDirectory()) {
                 if (!file.getAbsolutePath().contains("/Android/")) {
@@ -77,6 +90,15 @@ public class AutoScanFragment extends Fragment {
                     ncmFileList.add(file);
                 }
             }
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // 释放线程池，避免内存泄漏
+        if (adapter != null) {
+            adapter.release();
         }
     }
 }
