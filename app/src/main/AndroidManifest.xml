@@ -1,33 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    android:installLocation="auto">
 
-    <!-- 音频文件处理核心权限 -->
-    <!-- Android 13+ 媒体文件读取权限 -->
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-    <!-- Android 12及以下 存储读取权限 -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <!-- Android 10及以下 存储写入权限 -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29" />
-    <!-- 前台服务权限（用于后台音频转换） -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
-    <!-- 网络权限（可选，用于在线更新等） -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 存储权限适配 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="NCM音频转换器"
-        android:roundIcon="@mipmap/sym_def_app_icon"
-        android:supportsRtl="true"
+        android:icon="@android:mipmap/sym_def_app_icon"
+        android:label="NCM2FLAC转换器"
+        android:roundIcon="@android:mipmap/sym_def_app_icon"
         android:theme="@style/Theme.NCMConverterApp"
-        android:requestLegacyExternalStorage="true"
-        android:hardwareAccelerated="true">
+        android:requestLegacyExternalStorage="true">
 
-        <!-- 主页面 -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -35,22 +22,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- 音频文件打开关联 -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="file" />
-                <data android:scheme="content" />
-                <data android:mimeType="audio/*" />
-                <data android:pathPattern=".*\\.ncm" />
-            </intent-filter>
         </activity>
-
-        <!-- 音频转换前台服务 -->
-        <service
-            android:name=".service.AudioConvertService"
-            android:foregroundServiceType="mediaProcessing"
-            android:exported="false" />
 
     </application>
 
