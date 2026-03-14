@@ -18,7 +18,7 @@ jobs:
       - name: 安装基础依赖工具
         run: |
           sudo apt update
-          sudo apt install -y wget unzip openjdk-17-jdk ecj
+          sudo apt install -y wget unzip openjdk-17-jdk ecj jq
 
       - name: 生成调试签名密钥
         run: |
@@ -28,12 +28,24 @@ jobs:
             -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      - name: 获取ncmc最新Release版本
+      - name: 自动获取ncmc最新release下载链接
         id: get_ncmc
         run: |
-          LATEST_TAG=$(gh api repos/magic-akari/ncmc/releases/latest | jq -r .tag_name)
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-          echo "已获取ncmc最新版本: $LATEST_TAG"
+          # 获取latest release的完整信息
+          RELEASE_DATA=$(gh api repos/magic-akari/ncmc/releases/latest)
+          
+          # 兼容多种命名规则，过滤出arm64(aarch64)架构的下载链接
+          ARM64_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | contains("aarch64-linux-android") or .name | contains("arm64-android")) | .browser_download_url')
+          # 过滤出armv7架构的下载链接
+          ARMV7_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | contains("armv7-linux-androideabi") or .name | contains("arm-android")) | .browser_download_url')
+          
+          # 输出到环境变量，供后续步骤使用
+          echo "ARM64_URL=$ARM64_URL" >> $GITHUB_ENV
+          echo "ARMV7_URL=$ARMV7_URL" >> $GITHUB_ENV
+          
+          # 打印日志，方便排查
+          echo "已获取arm64下载链接: $ARM64_URL"
+          echo "已获取armv7下载链接: $ARMV7_URL"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -43,19 +55,21 @@ jobs:
           mkdir -p assets
           
           # 下载arm64-v8a版本
-          wget -O ncmc-arm64.tar.gz https://github.com/magic-akari/ncmc/releases/download/${{ env.LATEST_TAG }}/ncmc-${{ env.LATEST_TAG }}-aarch64-linux-android.tar.gz
+          wget -O ncmc-arm64.tar.gz "${{ env.ARM64_URL }}"
           tar -xzf ncmc-arm64.tar.gz
-          cp ncmc-${{ env.LATEST_TAG }}-aarch64-linux-android/ncmc assets/ncmc-arm64
+          # 自动找到解压后的ncmc二进制，无需关心版本号目录名
+          find . -name "ncmc" -type f -path "*aarch64*" -exec cp {} assets/ncmc-arm64 \;
           
           # 下载armeabi-v7a版本
-          wget -O ncmc-armv7.tar.gz https://github.com/magic-akari/ncmc/releases/download/${{ env.LATEST_TAG }}/ncmc-${{ env.LATEST_TAG }}-armv7-linux-androideabi.tar.gz
+          wget -O ncmc-armv7.tar.gz "${{ env.ARMV7_URL }}"
           tar -xzf ncmc-armv7.tar.gz
-          cp ncmc-${{ env.LATEST_TAG }}-armv7-linux-androideabi/ncmc assets/ncmc-armv7
+          # 自动找到解压后的ncmc二进制
+          find . -name "ncmc" -type f -path "*armv7*" -exec cp {} assets/ncmc-armv7 \;
           
           # 清理临时文件
-          rm -rf ncmc-*.tar.gz ncmc-${{ env.LATEST_TAG }}-*
+          rm -rf ncmc-*.tar.gz ncmc-*/
 
-      - name: 下载Android官方构建工具（aapt2、dx、apksigner）
+      - name: 下载Android官方构建工具（彻底解决aapt2安装失败）
         run: |
           # 下载Android Build Tools 34.0.0官方稳定包（兼容API 35）
           wget -O build-tools.zip https://dl.google.com/android/repository/build-tools_r34-linux.zip
