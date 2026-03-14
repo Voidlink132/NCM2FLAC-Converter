@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 适配AppCompatActivity的正确主题，AppCompat官方系列，无ActionBar，彻底解决闪退 -->
     <style name="Theme.NCMConverterApp" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="android:statusBarColor">#FF80AB</item>
+    </style>
+
+    <style name="TabTextStyle">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">normal</item>
     </style>
 </resources>
