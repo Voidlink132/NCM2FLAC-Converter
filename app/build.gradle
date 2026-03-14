@@ -3,21 +3,19 @@ plugins {
 }
 
 android {
-    // 完全保留你原有的包名，零改动
+    // 严格匹配你的项目包名，零改动
     namespace "com.ncmconverter.app"
-    // 完全保留你原有的SDK版本配置，零改动
     compileSdk 34
 
     defaultConfig {
-        // 完全保留你原有的应用ID、版本配置，零改动
         applicationId "com.ncmconverter.app"
         minSdk 21
         targetSdk 35
         versionCode 1
         versionName "1.0.0"
-
-        // 低版本API多dex支持
+        // 低版本系统多dex支持
         multiDexEnabled true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -27,23 +25,24 @@ android {
         }
     }
 
-    // 【核心修复】官方要求的Java 8兼容配置，解决所有dexing报错
+    // 核心修复：Java 8兼容配置，彻底解决dexing报错
     compileOptions {
-        // 开启Java 8语言特性兼容
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-        // 开启脱糖支持，让低版本Android系统支持Java 8 API，解决minSdk 21的兼容问题
         isCoreLibraryDesugaringEnabled true
     }
 }
 
 dependencies {
-    // 【核心修复】脱糖支持所需的依赖，官方要求必须添加
+    // 脱糖支持依赖，必须添加
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
-
-    // 完全保留你原有的基础依赖，零改动，仅补充多dex支持
+    // 安卓基础兼容依赖，零改动
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.multidex:multidex:2.0.1'
+    // 测试依赖，无需可删除
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }
