@@ -1,37 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.ncm2flac"
+    android:versionCode="1"
+    android:versionName="1.0.0">
 
-    <!-- 基础存储权限（Android 10及以下） -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <!-- Android 13+ 媒体音频权限 -->
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" android:minSdkVersion="33" />
-    <!-- Android 11+ 全文件访问权限（必须，用于读取网易云下载目录） -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" android:minSdkVersion="30" />
-    <!-- 网络权限（用于下载LRC歌词） -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- 通知权限 -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" android:minSdkVersion="33" />
+    <!-- SDK版本配置：Android Studio项目优先以module级build.gradle为准，此处为兜底兼容 -->
+    <uses-sdk
+        android:minSdkVersion="21"
+        android:targetSdkVersion="34"
+        android:compileSdkVersion="34" />
+
+    <!-- ====================== 核心权限声明（ncm转flac必备，按需调整） ====================== -->
+    <!-- 基础通用权限：安装即授予，无需动态申请 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- 前台转换服务必备，Android 8.0+ -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- 防止转换过程中CPU休眠导致中断 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" /> <!-- Android 14+ 前台服务类型声明 -->
+
+    <!-- 必须动态申请的危险权限（Android 6.0+ 需代码申请用户同意后才可使用） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> <!-- Android 13+ 发送转换进度通知必备 -->
+    
+    <!-- 存储权限适配：覆盖Android 5.0~Android 14全版本 -->
+    <!-- Android 13+ 读取媒体文件（含ncm加密音频） -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> <!-- 读取内嵌专辑封面 -->
+    <!-- Android 12及以下存储权限兼容 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+    <!-- Android 10+ 全文件访问权限（用于读取任意目录的ncm文件、写入转换后的flac） -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
+    <!-- 硬件功能声明：非强制，避免应用商店过滤无对应硬件的设备 -->
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
+
+    <!-- ====================== 应用核心配置 ====================== -->
     <application
         android:allowBackup="true"
-        android:icon="@android:drawable/ic_media_play"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@android:drawable/ic_media_play"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Ncm2Flac"
-        android:requestLegacyExternalStorage="true"
-        tools:targetApi="31">
-        <activity>
+        android:usesCleartextTraffic="false" <!-- 纯本地转换无需HTTP，禁用更安全 -->
+        android:requestLegacyExternalStorage="true" <!-- 兼容Android 10的分区存储过渡方案 -->
+        tools:targetApi="34">
+
+        <!-- ====================== 主启动Activity（应用入口，不可删除） ====================== -->
+        <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Ncm2Flac">
+            android:exported="true" <!-- Android 12+ 强制要求，启动页必须显式设为true -->
+            android:label="@string/app_name"
+            android:configChanges="orientation|screenSize|keyboardHidden"> <!-- 屏幕旋转不重启页面 -->
             <intent-filter>
+                <!-- 桌面图标入口必备，两个标签缺一不可 -->
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- 支持直接打开.ncm后缀文件 -->
+            <!-- 支持文件管理器打开.ncm文件时唤起本应用 -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -41,6 +71,22 @@
                 <data android:pathPattern=".*\\.ncm" />
             </intent-filter>
         </activity>
+
+        <!-- ====================== 音频转换前台服务（核心功能，避免转换被系统杀死） ====================== -->
+        <service
+            android:name=".service.AudioConvertService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            tools:targetApi="34" />
+
+        <!-- ====================== 可选：设置页面Activity（按需启用） ====================== -->
+        <!--
+        <activity
+            android:name=".SettingActivity"
+            android:exported="false"
+            android:label="@string/title_setting" />
+        -->
+
     </application>
 
 </manifest>
