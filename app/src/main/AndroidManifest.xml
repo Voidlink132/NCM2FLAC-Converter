@@ -14,20 +14,21 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
 
-    <!-- 完全保留你原有的应用配置，零改动 -->
+    <!-- 补充主题配置，零改动原有内容 -->
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="NCM2FLAC转换器"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.NCM2FLAC"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
         tools:targetApi="34">
 
-        <!-- 完全保留你原有的MainActivity配置，零改动类名、intent-filter -->
+        <!-- 完全保留你原有的MainActivity配置，零改动 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="NCM2FLAC转换器"
+            android:label="@string/app_name"
             android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
