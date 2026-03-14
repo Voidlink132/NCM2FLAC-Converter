@@ -15,10 +15,10 @@ jobs:
       - name: 检出项目代码
         uses: actions/checkout@v4
 
-      - name: 安装编译依赖工具
+      - name: 安装基础依赖工具
         run: |
           sudo apt update
-          sudo apt install -y wget unzip openjdk-17-jdk aapt2 dx apksigner
+          sudo apt install -y wget unzip openjdk-17-jdk ecj
 
       - name: 生成调试签名密钥
         run: |
@@ -55,13 +55,28 @@ jobs:
           # 清理临时文件
           rm -rf ncmc-*.tar.gz ncmc-${{ env.LATEST_TAG }}-*
 
-      - name: 下载Android 35 SDK核心库
+      - name: 下载Android官方构建工具（aapt2、dx、apksigner）
         run: |
+          # 下载Android Build Tools 34.0.0官方稳定包（兼容API 35）
+          wget -O build-tools.zip https://dl.google.com/android/repository/build-tools_r34-linux.zip
+          unzip build-tools.zip -d build-tools
+          
+          # 给工具添加执行权限并移动到系统路径
+          sudo chmod +x build-tools/android-14/aapt2
+          sudo chmod +x build-tools/android-14/dx
+          sudo chmod +x build-tools/android-14/apksigner
+          sudo chmod +x build-tools/android-14/zipalign
+          sudo mv build-tools/android-14/* /usr/local/bin/
+          
+          # 下载Android 35 SDK核心android.jar
           wget -O android.jar https://github.com/AndroidIDEOfficial/android-jar/raw/master/android-35.jar
+          
+          # 清理临时文件
+          rm -rf build-tools.zip build-tools
 
       - name: 清空旧编译缓存
         run: |
-          rm -rf build compiled_res classes.dex app-unsigned.apk app-signed.apk
+          rm -rf build compiled_res classes.dex app-unsigned.apk app-aligned.apk app-signed.apk
 
       - name: 编译资源文件
         run: aapt2 compile --dir res -o compiled_res
@@ -86,11 +101,14 @@ jobs:
           zip -u app-unsigned.apk classes.dex
           zip -r app-unsigned.apk assets/
 
+      - name: 对齐APK（优化安卓运行性能）
+        run: zipalign -f 4 app-unsigned.apk app-aligned.apk
+
       - name: 签名APK
         run: |
           apksigner sign --ks ~/.android/debug.keystore \
             --ks-pass pass:android --key-pass pass:android \
-            --out app-signed.apk app-unsigned.apk
+            --out app-signed.apk app-aligned.apk
 
       - name: 上传打包完成的APK
         uses: actions/upload-artifact@v4
