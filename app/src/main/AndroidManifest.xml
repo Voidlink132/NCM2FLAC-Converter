@@ -1,34 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    android:installLocation="auto">
+    package="com.ncm2flac"
+    android:versionCode="1"
+    android:versionName="1.1.0">
 
-    <!-- 核心转换功能必须的存储权限 -->
+    <!-- 适配Android 15+ 所有文件访问权限 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <!-- 歌词下载功能必须的网络权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- 读取媒体库图片，用于自定义背景 -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" android:maxSdkVersion="33" />
+
+    <uses-sdk
+        android:minSdkVersion="24"
+        android:targetSdkVersion="35" />
 
     <application
-    android:allowBackup="true"
-    android:icon="@android:mipmap/sym_def_app_icon"
-    android:label="NCM2FLAC转换器"
-    android:roundIcon="@android:mipmap/sym_def_app_icon"
-    android:theme="@style/Theme.NCMConverterApp"
-    android:requestLegacyExternalStorage="true">
-
-        <activity
-            android:name="com.ncm2flac.MainActivity"
-            android:exported="true">
+        android:label="NCM2FLAC转换器"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="true"
+        android:supportsRtl="true">
+        <activity android:name="com.ncm2flac.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>
