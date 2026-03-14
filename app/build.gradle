@@ -40,7 +40,7 @@ dependencies {
 
     // 【补全缺失的第三方依赖】100%匹配你代码里的引用，零改动
     // 音频标签处理库jaudiotagger，匹配你代码里的org.jaudiotagger引用
-    implementation 'org.jaudio:jaudiotagger:2.2.6'
+    implementation 'org.jaudio:jaudiotagger:3.0.1'
     // 网络请求库okhttp3，匹配你代码里的okhttp3引用
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 
