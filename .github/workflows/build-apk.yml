@@ -1,65 +1,99 @@
-name: Manual-Packing
-
-# 【核心修改】仅保留手动触发，彻底关闭自动触发
+name: Build NCM2FLAC APK
 on:
-  workflow_dispatch: # 这是GitHub官方手动触发的专属配置，只有你手动点击才会执行
-    # 可选：手动触发时支持自定义参数（比如选择编译Release/Debug）
-    inputs:
-      buildType:
-        description: '编译类型'
-        required: true
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - release
-          - debug
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - name: 检出代码
+      - name: 检出项目代码
         uses: actions/checkout@v4
 
-      - name: 设置Java环境
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
+      - name: 安装编译依赖工具
+        run: |
+          sudo apt update
+          sudo apt install -y wget unzip openjdk-17-jdk aapt2 dx apksigner
 
-      - name: 设置Android环境
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 11076708
-          accept-android-sdk-licenses: true
+      - name: 生成调试签名密钥
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore \
+            -storepass android -alias androiddebugkey -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
 
-      - name: 授予gradlew执行权限
-        run: chmod +x gradlew
+      - name: 获取ncmc最新Release版本
+        id: get_ncmc
+        run: |
+          LATEST_TAG=$(gh api repos/magic-akari/ncmc/releases/latest | jq -r .tag_name)
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "已获取ncmc最新版本: $LATEST_TAG"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 清理旧编译缓存
-        run: ./gradlew clean
+      - name: 下载ncmc安卓预编译二进制（全架构）
+        run: |
+          # 创建assets目录存放二进制
+          mkdir -p assets
+          
+          # 下载arm64-v8a版本
+          wget -O ncmc-arm64.tar.gz https://github.com/magic-akari/ncmc/releases/download/${{ env.LATEST_TAG }}/ncmc-${{ env.LATEST_TAG }}-aarch64-linux-android.tar.gz
+          tar -xzf ncmc-arm64.tar.gz
+          cp ncmc-${{ env.LATEST_TAG }}-aarch64-linux-android/ncmc assets/ncmc-arm64
+          
+          # 下载armeabi-v7a版本
+          wget -O ncmc-armv7.tar.gz https://github.com/magic-akari/ncmc/releases/download/${{ env.LATEST_TAG }}/ncmc-${{ env.LATEST_TAG }}-armv7-linux-androideabi.tar.gz
+          tar -xzf ncmc-armv7.tar.gz
+          cp ncmc-${{ env.LATEST_TAG }}-armv7-linux-androideabi/ncmc assets/ncmc-armv7
+          
+          # 清理临时文件
+          rm -rf ncmc-*.tar.gz ncmc-${{ env.LATEST_TAG }}-*
 
-      # 根据手动选择的编译类型执行
-      - name: 编译Release APK
-        if: ${{ inputs.buildType == 'all' || inputs.buildType == 'release' }}
-        run: ./gradlew assembleRelease
+      - name: 下载Android 35 SDK核心库
+        run: |
+          wget -O android.jar https://github.com/AndroidIDEOfficial/android-jar/raw/master/android-35.jar
 
-      - name: 编译Debug APK
-        if: ${{ inputs.buildType == 'all' || inputs.buildType == 'debug' }}
-        run: ./gradlew assembleDebug
+      - name: 清空旧编译缓存
+        run: |
+          rm -rf build compiled_res classes.dex app-unsigned.apk app-signed.apk
 
-      - name: 上传Release APK到制品
-        if: ${{ inputs.buildType == 'all' || inputs.buildType == 'release' }}
+      - name: 编译资源文件
+        run: aapt2 compile --dir res -o compiled_res
+
+      - name: 链接资源与清单，生成未签名APK
+        run: |
+          aapt2 link -o app-unsigned.apk -I android.jar \
+            --manifest AndroidManifest.xml \
+            --rename-manifest-package com.ncm2flac \
+            compiled_res/*.flat
+
+      - name: 编译Java代码（兼容Java 1.7）
+        run: |
+          mkdir -p build
+          ecj -source 1.7 -target 1.7 -cp android.jar -d build src/com/ncm2flac/MainActivity.java
+
+      - name: 转换Class为Dex文件
+        run: dx --dex --output=classes.dex build/
+
+      - name: 将Dex与Assets资源加入APK
+        run: |
+          zip -u app-unsigned.apk classes.dex
+          zip -r app-unsigned.apk assets/
+
+      - name: 签名APK
+        run: |
+          apksigner sign --ks ~/.android/debug.keystore \
+            --ks-pass pass:android --key-pass pass:android \
+            --out app-signed.apk app-unsigned.apk
+
+      - name: 上传打包完成的APK
         uses: actions/upload-artifact@v4
         with:
-          name: Ncm2Flac-Release-APK
-          path: app/build/outputs/apk/release/*.apk
-
-      - name: 上传Debug APK到制品
-        if: ${{ inputs.buildType == 'all' || inputs.buildType == 'debug' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: Ncm2Flac-Debug-APK
-          path: app/build/outputs/apk/debug/*.apk
+          name: NCM2FLAC-转换器
+          path: app-signed.apk
