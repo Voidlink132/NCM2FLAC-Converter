@@ -2,6 +2,10 @@ pluginManagement {
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
+        // 国内加速可选，无需可删除
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
     }
 }
 dependencyResolutionManagement {
@@ -9,7 +13,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // 国内加速可选，无需可删除
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
     }
 }
-rootProject.name = "NCM2FLAC"
+rootProject.name = "NCM2FLAC-Converter"
+// 必须声明app模块，否则Gradle找不到项目入口
 include ':app'
