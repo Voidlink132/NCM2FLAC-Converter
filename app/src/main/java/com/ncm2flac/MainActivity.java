@@ -94,10 +94,13 @@ public class MainActivity extends AppCompatActivity {
     private void initViewPager() {
         ViewPager2 viewPager = findViewById(R.id.view_pager);
         TabLayout tabLayout = findViewById(R.id.tab_layout);
-        ViewPagerAdapter adapter = new ViewPagerAdapter(this);
+        ViewPagerAdapter adapter = new ViewPagerAdapter(this);    
         viewPager.setAdapter(adapter);
         viewPager.setOffscreenPageLimit(3);
-
+        
+        // 核心：代码实现禁止用户滑动切换Tab，替代XML里的错误属性
+        viewPager.setUserInputEnabled(false);
+    
         // 绑定Tab和ViewPager，同步图标和文字状态
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             switch (position) {
@@ -110,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                     tab.setIcon(R.drawable.ic_tab_manual);
                     break;
                 case 2:
-                    tab.setText("设置");
+                     tab.setText("设置");
                     tab.setIcon(R.drawable.ic_tab_setting);
                     break;
             }
