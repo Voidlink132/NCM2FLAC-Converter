@@ -14,6 +14,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 
     public ViewPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
+        // 添加三个Fragment
         fragmentList.add(new AutoScanFragment());
         fragmentList.add(new ManualSelectFragment());
         fragmentList.add(new SettingFragment());
