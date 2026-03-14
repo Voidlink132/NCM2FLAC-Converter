@@ -1,4 +1,4 @@
-name: 手动编译打包APK
+name: Manual-Packing
 
 # 【核心修改】仅保留手动触发，彻底关闭自动触发
 on:
