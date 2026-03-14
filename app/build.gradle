@@ -3,15 +3,19 @@ plugins {
 }
 
 android {
-    namespace 'com.ncm2flac'
-    compileSdk 35
+    // 【核心修复】AGP 8.0+ 强制要求，必须在这里设置包名，和你的源码包名完全匹配
+    namespace "com.ncm2flac.converter"
+    // 【修复版本兼容】AGP 8.2.0最高支持compileSdk 34，降级到34彻底消除警告
+    compileSdk 34
 
     defaultConfig {
-        applicationId "com.ncm2flac"
-        minSdk 24
-        targetSdk 35
-        versionCode 2
-        versionName "1.1.0"
+        applicationId "com.ncm2flac.converter"
+        minSdk 21
+        // 同步targetSdk到34，和compileSdk保持一致
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -19,44 +23,20 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
-        }
-        debug {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-    viewBinding {
-        enabled = true
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
-    // AndroidX核心
+    // 基础Android依赖，根据你的项目按需调整
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.activity:activity:1.9.0'
-    implementation 'androidx.fragment:fragment:1.8.0'
-
-    // 底部导航+ViewPager2
-    implementation 'androidx.viewpager2:viewpager2:1.1.0'
-    implementation 'com.google.android.material:material:1.12.0'
-
-    // 列表RecyclerView
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
-
-    // 网络请求（LRC歌词下载）
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-
-    // 音频元数据处理
-    implementation 'net.jthink:jaudiotagger:3.0.1'
-
-    // 测试依赖
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
