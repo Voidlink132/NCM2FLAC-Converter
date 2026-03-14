@@ -11,12 +11,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:allowBackup="true"
-        android:icon="@android:mipmap/sym_def_app_icon"
-        android:label="NCM2FLAC转换器"
-        android:roundIcon="@android:mipmap/sym_def_app_icon"
-        android:theme="@style/Theme.NCMConverterApp"
-        android:requestLegacyExternalStorage="true">
+    android:allowBackup="true"
+    android:icon="@android:mipmap/sym_def_app_icon"
+    android:label="NCM2FLAC转换器"
+    android:roundIcon="@android:mipmap/sym_def_app_icon"
+    android:theme="@style/Theme.NCMConverterApp"
+    android:requestLegacyExternalStorage="true">
 
         <activity
             android:name="com.ncm2flac.MainActivity"
