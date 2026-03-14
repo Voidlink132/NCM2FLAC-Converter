@@ -1,129 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#FFFFFF"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="20dp">
 
-    <!-- LRC开关 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:background="@color/gray_light"
-        android:layout_marginBottom="8dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/switch_lrc"
-            android:textSize="16sp"
-            android:layout_gravity="center_vertical"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_lrc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"/>
-
-    </LinearLayout>
-
-    <!-- 权限检测 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@color/gray_light"
-        android:layout_marginBottom="8dp">
-
+        <!-- 版本号显示 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingVertical="16dp"
+            android:gravity="center_vertical">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/permission_check"
+                android:text="当前版本"
                 android:textSize="16sp"
-                android:layout_gravity="center_vertical"/>
+                android:textColor="#333333"/>
 
             <TextView
-                android:id="@+id/tv_permission_status"
+                android:id="@+id/tv_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="1.0.0"
                 android:textSize="14sp"
-                android:textColor="@color/gray"
-                android:layout_gravity="center_vertical"/>
+                android:textColor="#666666"/>
 
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_permission"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/permission_go_to_set"
-            android:textSize="14sp"
-            android:layout_marginTop="8dp"
-            android:layout_gravity="end"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="#E0E0E0"/>
 
-    </LinearLayout>
-
-    <!-- 版本号 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:background="@color/gray_light"
-        android:layout_marginBottom="8dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/version_name"
-            android:textSize="16sp"
-            android:layout_gravity="center_vertical"/>
-
-        <TextView
-            android:id="@+id/tv_version"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="@color/gray"
-            android:layout_gravity="center_vertical"/>
-
-    </LinearLayout>
-
-    <!-- 更新日志 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@color/gray_light">
-
-        <TextView
+        <!-- 使用说明 -->
+        <LinearLayout
+            android:id="@+id/layout_usage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/update_log"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
+            android:orientation="horizontal"
+            android:paddingVertical="16dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:foreground="?android:attr/selectableItemBackground">
 
-        <TextView
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="使用说明"
+                android:textSize="16sp"
+                android:textColor="#333333"/>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@android:drawable/ic_menu_more"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="#E0E0E0"/>
+
+        <!-- 检查权限 -->
+        <LinearLayout
+            android:id="@+id/layout_check_permission"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/update_log_content"
-            android:textSize="14sp"
-            android:textColor="@color/gray"
-            android:lineSpacingExtra="4dp"/>
+            android:orientation="horizontal"
+            android:paddingVertical="16dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_lock_lock"
+                android:layout_marginEnd="12dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="检查权限"
+                android:textSize="16sp"
+                android:textColor="#333333"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="#E0E0E0"/>
+
+        <!-- 自定义APP背景 -->
+        <LinearLayout
+            android:id="@+id/layout_set_background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="16dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_gallery"
+                android:layout_marginEnd="12dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="自定义APP背景"
+                android:textSize="16sp"
+                android:textColor="#333333"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="#E0E0E0"/>
 
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>
