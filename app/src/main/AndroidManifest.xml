@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ncmconverter.app">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- 音频文件处理核心权限 -->
     <!-- Android 13+ 媒体文件读取权限 -->
