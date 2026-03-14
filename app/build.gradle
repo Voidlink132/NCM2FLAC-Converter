@@ -3,11 +3,12 @@ plugins {
 }
 
 android {
-    // 严格匹配你的项目包名，零改动
+    // 严格保留你原有的包名，零改动
     namespace "com.ncmconverter.app"
     compileSdk 34
 
     defaultConfig {
+        // 完全保留你原有的应用ID、版本配置，零改动
         applicationId "com.ncmconverter.app"
         minSdk 21
         targetSdk 35
@@ -25,18 +26,19 @@ android {
         }
     }
 
-    // 核心修复：Java 8兼容配置，彻底解决dexing报错
+    // 【修复语法错误】Groovy DSL正确的Java 8兼容+脱糖配置
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled true
+        // 修复：Groovy语法去掉is前缀，正确写法
+        coreLibraryDesugaringEnabled true
     }
 }
 
 dependencies {
-    // 脱糖支持依赖，必须添加
+    // 脱糖支持依赖，和AGP 8.2.0完全匹配
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
-    // 安卓基础兼容依赖，零改动
+    // 完全保留你原有的基础依赖，零改动
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
