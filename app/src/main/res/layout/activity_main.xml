@@ -1,109 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/root_layout"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    android:background="?android:attr/colorBackground">
 
-    <!-- 无权限时显示的布局 -->
+    <!-- 顶部标题栏 -->
     <LinearLayout
-        android:id="@+id/layout_permission_denied"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingTop="80dp"
-        android:paddingHorizontal="20dp"
-        android:visibility="visible">
+        android:layout_height="?attr/actionBarSize"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:background="?attr/colorPrimary">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="NCM转换器"
-            android:textSize="36sp"
-            android:textColor="#666666"
-            android:layout_marginBottom="60dp"/>
-
-        <Button
-            android:id="@+id/btn_auto_scan"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="自动扫描NCM文件"
+            android:text="NCM2FLAC转换器"
+            android:textColor="@android:color/white"
             android:textSize="18sp"
-            android:background="#E0E0E0"
-            android:textColor="#333333"
-            android:layout_marginBottom="20dp"
-            android:enabled="false"/>
-
-        <Button
-            android:id="@+id/btn_manual_select"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="手动选择NCM文件"
-            android:textSize="18sp"
-            android:background="#E0E0E0"
-            android:textColor="#333333"
-            android:layout_marginBottom="40dp"
-            android:enabled="false"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="请先开启所有文件访问权限，否则无法读取和转换文件"
-            android:textColor="#FF0000"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:layout_marginBottom="30dp"/>
-
-        <!-- 一键获取权限按钮 -->
-        <Button
-            android:id="@+id/btn_get_permission"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="一键获取文件访问权限"
-            android:textSize="18sp"
-            android:background="#FF80AB"
-            android:textColor="#FFFFFF"/>
+            android:textStyle="bold"/>
 
     </LinearLayout>
 
-    <!-- 有权限时显示的内容布局 -->
-    <LinearLayout
-        android:id="@+id/layout_content"
+    <!-- 文件列表控件，ID和代码完全匹配 -->
+    <ListView
+        android:id="@+id/file_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="?android:attr/dividerHorizontal"
+        android:dividerHeight="1dp"
+        android:paddingHorizontal="8dp"/>
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/view_pager"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
-
-        <!-- 底部Tab栏，带drawable目录的图标，图标+文字同时显示 -->
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tab_layout"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="#F8F8F8"
-            app:tabIndicatorHeight="2dp"
-            app:tabIndicatorColor="#FF80AB"
-            app:tabSelectedTextColor="#FF80AB"
-            app:tabTextColor="#666666"
-            app:tabIconTint="@color/tab_icon_selector"
-            app:tabTextAppearance="@style/TabTextStyle"
-            app:tabGravity="fill"
-            app:tabMode="fixed">
-
-            <com.google.android.material.tabs.TabItem
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="自动"
-                android:icon="@drawable/ic_tab_auto"/>
+</LinearLayout>
 
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
