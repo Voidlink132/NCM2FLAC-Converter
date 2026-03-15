@@ -13,10 +13,13 @@ jobs:
       - name: 检出仓库代码
         uses: actions/checkout@v4
 
-      - name: 安装构建依赖（修复aapt2安装问题）
+      - name: 安装构建依赖（修复Ubuntu 24.04 aapt2安装问题）
         run: |
+          # 自动接受Android SDK许可协议，避免CI环境交互卡住
+          sudo debconf-set-selections <<< "google-android-build-tools-34.0.0-installer google-android-build-tools/install_license boolean true"
+          # 更新源并安装依赖，用官方Build Tools提供aapt2
           sudo apt-get update
-          sudo apt-get install -y aapt2 openjdk-17-jdk wget curl unzip
+          sudo apt-get install -y google-android-build-tools-34.0.0-installer openjdk-17-jdk wget curl unzip apksigner
 
       - name: 创建工作目录与assets目录
         run: |
@@ -79,7 +82,7 @@ jobs:
               package="com.ncm2flac"
               android:versionCode="1"
               android:versionName="${{ steps.get-ncmc.outputs.version }}">
-              <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33"/>
+              <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34"/>
               <application android:label="NCM2flac" android:icon="@mipmap/ic_launcher">
                   <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
@@ -105,7 +108,7 @@ jobs:
         run: |
           # 编译资源
           aapt2 compile -o build/res.zip build/res/values/strings.xml
-          aapt2 link build/res.zip --manifest build/AndroidManifest.xml -o build/unaligned.apk -I /usr/lib/android-sdk/platforms/android-33/android.jar
+          aapt2 link build/res.zip --manifest build/AndroidManifest.xml -o build/unaligned.apk -I /usr/lib/android-sdk/platforms/android-34/android.jar
           
           # 将assets打包进APK
           cd build
