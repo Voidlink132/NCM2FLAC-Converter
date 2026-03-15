@@ -1,156 +1,127 @@
-name: Build NCM2FLAC APK
+name: 自动打包NCM2flac APK
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
     branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
-    # 显式声明权限，确保token能读取release，解决API权限问题
     permissions:
-      contents: read
+      contents: read # 显式声明权限，解决token读取release权限问题
     steps:
-      - name: 检出项目代码
+      - name: 检出仓库代码
         uses: actions/checkout@v4
 
-      - name: 安装基础依赖工具
+      - name: 安装构建依赖（修复aapt2安装问题）
         run: |
-          sudo apt update
-          sudo apt install -y wget unzip openjdk-17-jdk ecj jq
+          sudo apt-get update
+          sudo apt-get install -y aapt2 openjdk-17-jdk wget curl unzip
 
-      - name: 生成调试签名密钥
+      - name: 创建工作目录与assets目录
         run: |
-          mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore \
-            -storepass android -alias androiddebugkey -keypass android \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
-
-      - name: 自动获取ncmc最新release下载链接（带错误兜底）
-        id: get_ncmc
+          mkdir -p build/assets build/lib/arm64-v8a build/res/values build/META-INF
+          
+      - name: 获取ncmc最新版二进制（双层兜底，API失败不中断构建）
+        id: get-ncmc
         run: |
-          # 官方稳定版备用链接（兜底用，确保构建不会中断）
-          FALLBACK_ARM64_URL="https://github.com/magic-akari/ncmc/releases/download/v0.2.11/ncmc-v0.2.11-aarch64-linux-android.tar.gz"
-          FALLBACK_ARMV7_URL="https://github.com/magic-akari/ncmc/releases/download/v0.2.11/ncmc-v0.2.11-armv7-linux-androideabi.tar.gz"
-
-          # 加--fail参数：API调用失败时直接返回非0退出码，方便捕获
-          # 加--silent参数：避免多余输出污染JSON数据
-          if RELEASE_DATA=$(gh api --silent --fail repos/magic-akari/ncmc/releases/latest); then
-            echo "✅ 成功获取ncmc最新release信息"
+          # 备用稳定版链接，API完全失败时兜底
+          FALLBACK_URL="https://github.com/taurusxin/ncmc/releases/download/v1.2.1/ncmc-linux-arm64.zip"
+          FALLBACK_VERSION="1.2.1"
+          
+          # 第一层：调用GitHub API，加--fail参数，失败直接走兜底
+          if RELEASE_DATA=$(gh api --fail repos/taurusxin/ncmc/releases/latest 2>/dev/null); then
+            # jq加?安全访问符，字段缺失不报错，仅返回空值
+            DOWNLOAD_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[]? | select(.name | contains("linux-arm64")) | .browser_download_url')
+            VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name? | ltrimstr("v")')
             
-            # jq加安全访问符?，字段不存在时不会报错，返回空
-            ARM64_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[]? | select(.name | contains("aarch64-linux-android") or .name | contains("arm64-android")) | .browser_download_url')
-            ARMV7_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[]? | select(.name | contains("armv7-linux-androideabi") or .name | contains("arm-android")) | .browser_download_url')
-
-            # 如果获取到的链接为空，自动使用备用链接
-            if [ -z "$ARM64_URL" ] || [ -z "$ARMV7_URL" ]; then
-              echo "⚠️ 未匹配到对应架构的下载链接，使用备用稳定版"
-              ARM64_URL=$FALLBACK_ARM64_URL
-              ARMV7_URL=$FALLBACK_ARMV7_URL
+            # 第二层：API成功但匹配不到链接，走备用稳定版
+            if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
+              echo "⚠️ 未匹配到arm64下载链接，使用备用稳定版v$FALLBACK_VERSION"
+              DOWNLOAD_URL="$FALLBACK_URL"
+              VERSION="$FALLBACK_VERSION"
             fi
           else
-            echo "⚠️ GitHub API调用失败，使用备用稳定版链接"
-            ARM64_URL=$FALLBACK_ARM64_URL
-            ARMV7_URL=$FALLBACK_ARMV7_URL
+            # API调用完全失败（限流/权限/网络问题），直接走备用稳定版
+            echo "⚠️ GitHub API调用失败，使用备用稳定版v$FALLBACK_VERSION"
+            DOWNLOAD_URL="$FALLBACK_URL"
+            VERSION="$FALLBACK_VERSION"
           fi
-
-          # 输出到环境变量，供后续步骤使用
-          echo "ARM64_URL=$ARM64_URL" >> $GITHUB_ENV
-          echo "ARMV7_URL=$ARMV7_URL" >> $GITHUB_ENV
           
-          # 打印日志，方便排查
-          echo "最终使用arm64下载链接: $ARM64_URL"
-          echo "最终使用armv7下载链接: $ARMV7_URL"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 输出变量给后续步骤使用
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ 最终使用ncmc版本: v$VERSION"
 
-      - name: 下载ncmc安卓预编译二进制（全架构，带路径兼容）
+      - name: 下载并解压ncmc二进制（修复下载校验，解决0b文件问题）
         run: |
-          # 创建assets目录存放二进制
-          mkdir -p assets
+          # 用curl零兼容问题下载，失败直接退出
+          curl -fSL -o build/ncmc-linux-arm64.zip ${{ steps.get-ncmc.outputs.download_url }}
           
-          # 下载arm64-v8a版本，加--fail-on-error确保下载失败直接报错
-          wget --fail-on-error -O ncmc-arm64.tar.gz "${{ env.ARM64_URL }}"
-          tar -xzf ncmc-arm64.tar.gz
-          # 自动找到解压后的ncmc二进制，完全兼容任意目录名，无需关心版本号
-          find . -name "ncmc" -type f -exec cp {} assets/ncmc-arm64 \;
-          
-          # 下载armeabi-v7a版本
-          wget --fail-on-error -O ncmc-armv7.tar.gz "${{ env.ARMV7_URL }}"
-          tar -xzf ncmc-armv7.tar.gz
-          find . -name "ncmc" -type f -exec cp {} assets/ncmc-armv7 \;
-          
-          # 校验文件是否存在
-          if [ -f "assets/ncmc-arm64" ] && [ -f "assets/ncmc-armv7" ]; then
-            echo "✅ ncmc二进制文件下载完成"
-          else
-            echo "❌ ncmc二进制文件下载失败"
+          # 校验文件是否下载成功
+          if [ ! -s build/ncmc-linux-arm64.zip ]; then
+            echo "❌ 下载失败，文件为空"
             exit 1
           fi
           
-          # 清理临时文件
-          rm -rf ncmc-*.tar.gz ncmc-*/
+          # 解压并放置到正确位置
+          unzip build/ncmc-linux-arm64.zip -d build/
+          mv build/ncmc build/assets/ncmc
+          chmod +x build/assets/ncmc
+          echo "✅ ncmc二进制准备完成"
 
-      - name: 下载Android官方构建工具（彻底解决aapt2安装失败）
+      - name: 生成APK基础配置文件（固定包名com.ncm2flac）
         run: |
-          # 下载Android Build Tools 34.0.0官方稳定包（兼容API 35）
-          wget -O build-tools.zip https://dl.google.com/android/repository/build-tools_r34-linux.zip
-          unzip build-tools.zip -d build-tools
+          # 生成AndroidManifest.xml
+          cat > build/AndroidManifest.xml << EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.ncm2flac"
+              android:versionCode="1"
+              android:versionName="${{ steps.get-ncmc.outputs.version }}">
+              <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33"/>
+              <application android:label="NCM2flac" android:icon="@mipmap/ic_launcher">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
           
-          # 给工具添加执行权限并移动到系统路径
-          sudo chmod +x build-tools/android-14/aapt2
-          sudo chmod +x build-tools/android-14/dx
-          sudo chmod +x build-tools/android-14/apksigner
-          sudo chmod +x build-tools/android-14/zipalign
-          sudo mv build-tools/android-14/* /usr/local/bin/
+          # 生成基础资源文件
+          cat > build/res/values/strings.xml << EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">NCM2flac</string>
+          </resources>
+          EOF
           
-          # 下载Android 35 SDK核心android.jar
-          wget -O android.jar https://github.com/AndroidIDEOfficial/android-jar/raw/master/android-35.jar
+          echo "✅ APK配置文件生成完成"
+
+      - name: 编译资源与打包APK
+        run: |
+          # 编译资源
+          aapt2 compile -o build/res.zip build/res/values/strings.xml
+          aapt2 link build/res.zip --manifest build/AndroidManifest.xml -o build/unaligned.apk -I /usr/lib/android-sdk/platforms/android-33/android.jar
           
-          # 清理临时文件
-          rm -rf build-tools.zip build-tools
+          # 将assets打包进APK
+          cd build
+          zip -r unaligned.apk assets/
+          cd ..
+          
+          # 生成调试签名密钥
+          keytool -genkey -v -keystore build/debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -noprompt
+          
+          # 签名APK
+          apksigner sign --ks build/debug.keystore --ks-pass pass:android --key-pass pass:android --out build/NCM2flac.apk build/unaligned.apk
+          
+          echo "✅ APK打包签名完成"
 
-      - name: 清空旧编译缓存
-        run: |
-          rm -rf build compiled_res classes.dex app-unsigned.apk app-aligned.apk app-signed.apk
-
-      - name: 编译资源文件
-        run: aapt2 compile --dir res -o compiled_res
-
-      - name: 链接资源与清单，生成未签名APK
-        run: |
-          aapt2 link -o app-unsigned.apk -I android.jar \
-            --manifest AndroidManifest.xml \
-            --rename-manifest-package com.ncm2flac \
-            compiled_res/*.flat
-
-      - name: 编译Java代码（兼容Java 1.7）
-        run: |
-          mkdir -p build
-          ecj -source 1.7 -target 1.7 -cp android.jar -d build src/com/ncm2flac/MainActivity.java
-
-      - name: 转换Class为Dex文件
-        run: dx --dex --output=classes.dex build/
-
-      - name: 将Dex与Assets资源加入APK
-        run: |
-          zip -u app-unsigned.apk classes.dex
-          zip -r app-unsigned.apk assets/
-
-      - name: 对齐APK（优化安卓运行性能）
-        run: zipalign -f 4 app-unsigned.apk app-aligned.apk
-
-      - name: 签名APK
-        run: |
-          apksigner sign --ks ~/.android/debug.keystore \
-            --ks-pass pass:android --key-pass pass:android \
-            --out app-signed.apk app-aligned.apk
-
-      - name: 上传打包完成的APK
+      - name: 上传打包好的APK
         uses: actions/upload-artifact@v4
         with:
-          name: NCM2FLAC-转换器
-          path: app-signed.apk
+          name: NCM2flac-v${{ steps.get-ncmc.outputs.version }}-APK
+          path: build/NCM2flac.apk
