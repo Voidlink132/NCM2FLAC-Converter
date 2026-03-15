@@ -4,22 +4,24 @@ plugins {
 
 android {
     namespace "com.ncm2flac"
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.ncm2flac"
-        minSdk 24 // 和你Manifest里的minSdkVersion完全一致
-        targetSdk 35 // 和你Manifest里的targetSdkVersion完全一致
+        minSdk 24
+        targetSdk 35
         versionCode 1
         versionName "1.1.0"
-        // 你的原有其他配置完全保留
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable true
         }
     }
 
@@ -27,25 +29,21 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    buildFeatures {
+        viewBinding false
+    }
 }
 
 dependencies {
-    // 纯Java核心UI依赖，彻底排除Kotlin传递依赖
-    implementation('androidx.appcompat:appcompat:1.6.1') {
-        exclude group: 'androidx.core', module: 'core-ktx'
-    }
-    implementation('com.google.android.material:material:1.11.0') {
-        exclude group: 'androidx.core', module: 'core-ktx'
-    }
+    // AndroidX官方基础依赖，确保所有组件兼容
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.core:core:1.12.0'
+    implementation 'androidx.fragment:fragment:1.6.1'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
 
-    // 【修正后的正确依赖】官方稳定维护版，100%可下载，和现有代码API完全兼容
-    implementation 'net.jthink:jaudiotagger:3.0.1'
-    // 网络请求库，坐标正确无需修改
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-
-    // 测试依赖，不需要可以直接删除
+    // 测试依赖，不影响主程序构建
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
