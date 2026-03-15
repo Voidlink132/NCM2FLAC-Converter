@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # 显式声明权限，确保token能读取release，解决API权限问题
     permissions:
       contents: read
     steps:
@@ -28,43 +29,67 @@ jobs:
             -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      - name: 自动获取ncmc最新release下载链接
+      - name: 自动获取ncmc最新release下载链接（带错误兜底）
         id: get_ncmc
         run: |
-          # 获取latest release的完整信息
-          RELEASE_DATA=$(gh api repos/magic-akari/ncmc/releases/latest)
-          
-          # 兼容多种命名规则，过滤出arm64(aarch64)架构的下载链接
-          ARM64_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | contains("aarch64-linux-android") or .name | contains("arm64-android")) | .browser_download_url')
-          # 过滤出armv7架构的下载链接
-          ARMV7_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | contains("armv7-linux-androideabi") or .name | contains("arm-android")) | .browser_download_url')
-          
+          # 官方稳定版备用链接（兜底用，确保构建不会中断）
+          FALLBACK_ARM64_URL="https://github.com/magic-akari/ncmc/releases/download/v0.2.11/ncmc-v0.2.11-aarch64-linux-android.tar.gz"
+          FALLBACK_ARMV7_URL="https://github.com/magic-akari/ncmc/releases/download/v0.2.11/ncmc-v0.2.11-armv7-linux-androideabi.tar.gz"
+
+          # 加--fail参数：API调用失败时直接返回非0退出码，方便捕获
+          # 加--silent参数：避免多余输出污染JSON数据
+          if RELEASE_DATA=$(gh api --silent --fail repos/magic-akari/ncmc/releases/latest); then
+            echo "✅ 成功获取ncmc最新release信息"
+            
+            # jq加安全访问符?，字段不存在时不会报错，返回空
+            ARM64_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[]? | select(.name | contains("aarch64-linux-android") or .name | contains("arm64-android")) | .browser_download_url')
+            ARMV7_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[]? | select(.name | contains("armv7-linux-androideabi") or .name | contains("arm-android")) | .browser_download_url')
+
+            # 如果获取到的链接为空，自动使用备用链接
+            if [ -z "$ARM64_URL" ] || [ -z "$ARMV7_URL" ]; then
+              echo "⚠️ 未匹配到对应架构的下载链接，使用备用稳定版"
+              ARM64_URL=$FALLBACK_ARM64_URL
+              ARMV7_URL=$FALLBACK_ARMV7_URL
+            fi
+          else
+            echo "⚠️ GitHub API调用失败，使用备用稳定版链接"
+            ARM64_URL=$FALLBACK_ARM64_URL
+            ARMV7_URL=$FALLBACK_ARMV7_URL
+          fi
+
           # 输出到环境变量，供后续步骤使用
           echo "ARM64_URL=$ARM64_URL" >> $GITHUB_ENV
           echo "ARMV7_URL=$ARMV7_URL" >> $GITHUB_ENV
           
           # 打印日志，方便排查
-          echo "已获取arm64下载链接: $ARM64_URL"
-          echo "已获取armv7下载链接: $ARMV7_URL"
+          echo "最终使用arm64下载链接: $ARM64_URL"
+          echo "最终使用armv7下载链接: $ARMV7_URL"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 下载ncmc安卓预编译二进制（全架构）
+      - name: 下载ncmc安卓预编译二进制（全架构，带路径兼容）
         run: |
           # 创建assets目录存放二进制
           mkdir -p assets
           
-          # 下载arm64-v8a版本
-          wget -O ncmc-arm64.tar.gz "${{ env.ARM64_URL }}"
+          # 下载arm64-v8a版本，加--fail-on-error确保下载失败直接报错
+          wget --fail-on-error -O ncmc-arm64.tar.gz "${{ env.ARM64_URL }}"
           tar -xzf ncmc-arm64.tar.gz
-          # 自动找到解压后的ncmc二进制，无需关心版本号目录名
-          find . -name "ncmc" -type f -path "*aarch64*" -exec cp {} assets/ncmc-arm64 \;
+          # 自动找到解压后的ncmc二进制，完全兼容任意目录名，无需关心版本号
+          find . -name "ncmc" -type f -exec cp {} assets/ncmc-arm64 \;
           
           # 下载armeabi-v7a版本
-          wget -O ncmc-armv7.tar.gz "${{ env.ARMV7_URL }}"
+          wget --fail-on-error -O ncmc-armv7.tar.gz "${{ env.ARMV7_URL }}"
           tar -xzf ncmc-armv7.tar.gz
-          # 自动找到解压后的ncmc二进制
-          find . -name "ncmc" -type f -path "*armv7*" -exec cp {} assets/ncmc-armv7 \;
+          find . -name "ncmc" -type f -exec cp {} assets/ncmc-armv7 \;
+          
+          # 校验文件是否存在
+          if [ -f "assets/ncmc-arm64" ] && [ -f "assets/ncmc-armv7" ]; then
+            echo "✅ ncmc二进制文件下载完成"
+          else
+            echo "❌ ncmc二进制文件下载失败"
+            exit 1
+          fi
           
           # 清理临时文件
           rm -rf ncmc-*.tar.gz ncmc-*/
