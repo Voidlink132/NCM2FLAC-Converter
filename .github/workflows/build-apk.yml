@@ -13,22 +13,36 @@ jobs:
       - name: 检出仓库代码
         uses: actions/checkout@v4
 
-      - name: 安装基础依赖+直装aapt2/apksigner（彻底解决依赖冲突）
+      - name: 安装系统基础依赖（仅官方源稳定包，无任何Android依赖）
         run: |
-          # 安装基础依赖与Android平台jar包，无任何依赖冲突
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk wget curl unzip android-sdk-platform-34
+          # 仅安装Ubuntu官方源100%稳定存在的基础包，无任何Android相关依赖
+          sudo apt-get install -y openjdk-17-jdk curl unzip
+          echo "✅ 系统基础依赖安装完成"
+
+      - name: 部署Google官方Android构建工具（彻底摆脱apt依赖）
+        run: |
+          # 创建工具存放目录
+          sudo mkdir -p /usr/local/android-tools /usr/local/android-sdk/platforms
           
-          # 直接下载Google官方静态编译的build-tools，绕过apt包依赖
+          # 1. 下载并部署aapt2、apksigner（官方静态二进制，无依赖）
           curl -fSL -o build-tools.zip https://dl.google.com/android/repository/build-tools_r34-linux.zip
-          # 解压aapt2和apksigner到系统PATH，直接可用
           sudo unzip -j build-tools.zip android-14/aapt2 android-14/apksigner -d /usr/local/bin/
           sudo chmod +x /usr/local/bin/aapt2 /usr/local/bin/apksigner
           
-          # 验证安装成功，避免后续步骤异常
+          # 2. 下载并部署Android 34平台jar包（aapt2链接必需）
+          curl -fSL -o platform-34.zip https://dl.google.com/android/repository/platform-34_r03.zip
+          sudo unzip -j platform-34.zip android.jar -d /usr/local/android-sdk/platforms/android-34/
+          
+          # 验证所有工具部署成功
           aapt2 version
           apksigner version
-          echo "✅ aapt2与apksigner安装完成，无依赖冲突"
+          if [ -f /usr/local/android-sdk/platforms/android-34/android.jar ]; then
+            echo "✅ Android构建工具与SDK部署完成，无apt依赖"
+          else
+            echo "❌ Android SDK部署失败"
+            exit 1
+          fi
 
       - name: 创建工作目录与assets目录
         run: |
@@ -65,7 +79,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "✅ 最终使用ncmc版本: v$VERSION"
 
-      - name: 下载并解压ncmc二进制（修复下载校验，解决0b文件问题）
+      - name: 下载并解压ncmc二进制（下载校验，解决0b文件问题）
         run: |
           # 用curl零兼容问题下载，失败直接退出
           curl -fSL -o build/ncmc-linux-arm64.zip ${{ steps.get-ncmc.outputs.download_url }}
@@ -117,7 +131,8 @@ jobs:
         run: |
           # 编译资源
           aapt2 compile -o build/res.zip build/res/values/strings.xml
-          aapt2 link build/res.zip --manifest build/AndroidManifest.xml -o build/unaligned.apk -I /usr/lib/android-sdk/platforms/android-34/android.jar
+          # 链接APK，使用我们部署的官方android.jar，无apt依赖
+          aapt2 link build/res.zip --manifest build/AndroidManifest.xml -o build/unaligned.apk -I /usr/local/android-sdk/platforms/android-34/android.jar
           
           # 将assets打包进APK
           cd build
@@ -127,7 +142,7 @@ jobs:
           # 生成调试签名密钥
           keytool -genkey -v -keystore build/debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -noprompt
           
-          # 签名APK
+          # 签名APK，使用我们部署的官方apksigner
           apksigner sign --ks build/debug.keystore --ks-pass pass:android --key-pass pass:android --out build/NCM2flac.apk build/unaligned.apk
           
           echo "✅ APK打包签名完成"
