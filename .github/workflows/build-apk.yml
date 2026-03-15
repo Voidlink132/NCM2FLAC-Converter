@@ -13,13 +13,22 @@ jobs:
       - name: 检出仓库代码
         uses: actions/checkout@v4
 
-      - name: 安装构建依赖（修复Ubuntu 24.04 aapt2安装问题）
+      - name: 安装基础依赖+直装aapt2/apksigner（彻底解决依赖冲突）
         run: |
-          # 自动接受Android SDK许可协议，避免CI环境交互卡住
-          sudo debconf-set-selections <<< "google-android-build-tools-34.0.0-installer google-android-build-tools/install_license boolean true"
-          # 更新源并安装依赖，用官方Build Tools提供aapt2
+          # 安装基础依赖与Android平台jar包，无任何依赖冲突
           sudo apt-get update
-          sudo apt-get install -y google-android-build-tools-34.0.0-installer openjdk-17-jdk wget curl unzip apksigner
+          sudo apt-get install -y openjdk-17-jdk wget curl unzip android-sdk-platform-34
+          
+          # 直接下载Google官方静态编译的build-tools，绕过apt包依赖
+          curl -fSL -o build-tools.zip https://dl.google.com/android/repository/build-tools_r34-linux.zip
+          # 解压aapt2和apksigner到系统PATH，直接可用
+          sudo unzip -j build-tools.zip android-14/aapt2 android-14/apksigner -d /usr/local/bin/
+          sudo chmod +x /usr/local/bin/aapt2 /usr/local/bin/apksigner
+          
+          # 验证安装成功，避免后续步骤异常
+          aapt2 version
+          apksigner version
+          echo "✅ aapt2与apksigner安装完成，无依赖冲突"
 
       - name: 创建工作目录与assets目录
         run: |
