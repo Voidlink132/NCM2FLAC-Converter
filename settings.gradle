@@ -1,24 +1,16 @@
 pluginManagement {
     repositories {
-        mavenCentral() // 优先中央仓库，确保jaudiotagger能正常下载
         google()
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
         gradlePluginPortal()
     }
 }
-
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        mavenCentral() // 优先中央仓库
         google()
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
     }
 }
-
-rootProject.name = "NCM2FLAC-Converter"
+rootProject.name = "NCM2FLACConverter"
 include ':app'
