@@ -6,7 +6,6 @@
     <string name="tip_permission">请先开启所有文件访问权限，否则无法读取和转换文件</string>
     <string name="convert_success">转换成功！文件已保存到/NCM2FLAC/目录</string>
     <string name="convert_failed">转换失败，请检查文件是否完整</string>
-    
     <!-- 之前补全的业务字符串，零改动 -->
     <string name="scan_ncm">扫描NCM文件</string>
     <string name="no_ncm_file">未找到NCM文件</string>
@@ -18,8 +17,7 @@
     <string name="update_log">更新日志</string>
     <string name="update_log_content">1. 修复FLAC转换后无法播放的问题\n2. 适配Android 15+存储权限规则\n3. 优化自动扫描逻辑，支持更多目录</string>
     <string name="convert">转换</string>
-
-    <!-- 【本次补全报错缺失的字符串】名称100%匹配底部导航菜单的引用，无拼写错误 -->
+    <!-- 底部导航菜单引用字符串，零改动 -->
     <string name="tab_auto">自动</string>
     <string name="tab_manual">手动</string>
     <string name="tab_settings">设置</string>
