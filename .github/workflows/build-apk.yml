@@ -1,6 +1,5 @@
 name: 手动打包NCM2FLAC APK
 on:
-  # 仅保留手动触发入口，彻底移除push自动触发规则
   workflow_dispatch:
 
 jobs:
