@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace "com.ncm2flac"
-    compileSdk 35
+    namespace "com.musicdecrypter"
+    compileSdk 34
 
     defaultConfig {
-        applicationId "com.ncm2flac"
+        applicationId "com.musicdecrypter"
         minSdk 24
-        targetSdk 35
+        targetSdk 34
         versionCode 1
-        versionName "1.1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -20,9 +20,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        debug {
-            debuggable true
-        }
     }
 
     compileOptions {
@@ -30,22 +27,28 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    buildFeatures {
-        viewBinding false
+    viewBinding {
+        enabled = true
     }
 }
 
 dependencies {
-    // 完全保留你原有依赖，仅升级到稳定兼容版本，不影响业务逻辑
+    // AndroidX官方核心组件
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.fragment:fragment:1.8.0'
-    implementation 'androidx.core:core-splashscreen:1.0.1'
-    implementation 'net.jthink:jaudiotagger:2.2.5'
-    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
-    
+    implementation 'androidx.activity:activity-ktx:1.8.2'
+    implementation 'androidx.fragment:fragment-ktx:1.6.2'
+    implementation 'androidx.core:core-ktx:1.12.0'
+
+    // ViewPager2 滑动组件
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+
+    // Markdown渲染（使用说明）
+    implementation 'io.noties.markwon:core:4.6.2'
+
+    // 测试组件
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
