@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import io.noties.markwon.Markon;
+import io.noties.markwon.Markwon;
 
 public class SettingsFragment extends Fragment {
 
@@ -76,7 +76,7 @@ public class SettingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 硬写版本，彻底干掉 BuildConfig 报错
+        // 硬编码版本，规避 BuildConfig 生成问题
         binding.tvVersion.setText("v1.0.0 (1)");
         binding.btnCheckPermission.setOnClickListener(v -> checkAllPermissions());
         renderUsageMarkdown();
@@ -134,7 +134,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void renderUsageMarkdown() {
-        Markon markon = Markon.create(requireContext());
+        Markwon markwon = Markwon.create(requireContext());
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(requireContext().getAssets().open("usage.md")));
             StringBuilder markdown = new StringBuilder();
@@ -143,7 +143,7 @@ public class SettingsFragment extends Fragment {
                 markdown.append(line).append("\n");
             }
             reader.close();
-            markon.setMarkdown(binding.tvUsage, markdown.toString());
+            markwon.setMarkdown(binding.tvUsage, markdown.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
