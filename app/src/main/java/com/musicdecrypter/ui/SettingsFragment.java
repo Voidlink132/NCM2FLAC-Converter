@@ -19,6 +19,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.musicdecrypter.BuildConfig;
+import com.musicdecrypter.R;
 import com.musicdecrypter.databinding.FragmentSettingsBinding;
 
 import java.io.BufferedReader;
